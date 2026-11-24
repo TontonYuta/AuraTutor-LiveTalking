@@ -41,8 +41,15 @@ class RTCManager:
 
     async def _create_pc_and_answer(self, avatar_session, sessionid, offer):
         """创建 PeerConnection、添加轨道、SDP 交换，返回已完成 answer 的 pc"""
-        # stun 为空时传空列表（禁用 STUN），否则传入指定 STUN
-        ice_servers = [RTCIceServer(urls=self.opt.stun)] if self.opt.stun else []
+        # Cấu hình danh sách STUN đáng tin cậy giúp NAT traversal ổn định trên Internet / Colab
+        default_stuns = [
+            'stun:stun.l.google.com:19302',
+            'stun:stun1.l.google.com:19302',
+            'stun:stun2.l.google.com:19302',
+            'stun:stun.freeswitch.org:3478'
+        ]
+        urls = [self.opt.stun] if (self.opt.stun and self.opt.stun not in default_stuns) else default_stuns
+        ice_servers = [RTCIceServer(urls=urls)]
         pc = RTCPeerConnection(
             configuration=RTCConfiguration(iceServers=ice_servers)
         )
