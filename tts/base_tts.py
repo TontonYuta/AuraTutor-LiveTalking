@@ -35,6 +35,7 @@ class BaseTTS:
         import re
         msg = (msg or "").strip()
         if re.search(r'[\w\d\u00C0-\u1EF9]', msg):
+            self.state = State.RUNNING
             self.msgqueue.put((msg, datainfo))
 
     def render(self, quit_event):

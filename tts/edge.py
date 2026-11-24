@@ -1,7 +1,8 @@
 import time
 import asyncio
 import numpy as np
-import resampy
+import torch
+import torchaudio.functional as F_audio
 import soundfile as sf
 import edge_tts
 from io import BytesIO
@@ -19,12 +20,14 @@ class EdgeTTS(BaseTTS):
         logger.info(f'txt_to_audio start: voice={voicename}, text={repr(text)}')
         t = time.time()
         
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        self.state = State.RUNNING
+        self.input_stream.seek(0)
+        self.input_stream.truncate()
+
         try:
-            loop.run_until_complete(self.__main(voicename, text))
-        finally:
-            loop.close()
+            asyncio.run(self.__main(voicename, text))
+        except Exception as e:
+            logger.warning(f"edge_tts execution warning: {e}")
 
         logger.info(f'-------edge tts time:{time.time()-t:.4f}s')
         if self.input_stream.getbuffer().nbytes<=0: #edgetts err
@@ -61,8 +64,9 @@ class EdgeTTS(BaseTTS):
             stream = stream[:, 0]
     
         if sample_rate != self.sample_rate and stream.shape[0]>0:
-            logger.info(f'[WARN] audio sample rate is {sample_rate}, resampling into {self.sample_rate}.')
-            stream = resampy.resample(x=stream, sr_orig=sample_rate, sr_new=self.sample_rate)
+            logger.info(f'[WARN] audio sample rate is {sample_rate}, fast resampling into {self.sample_rate} via torchaudio.')
+            t_tensor = torch.from_numpy(stream)
+            stream = F_audio.resample(t_tensor, sample_rate, self.sample_rate).numpy()
 
         return stream
     

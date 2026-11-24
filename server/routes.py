@@ -53,6 +53,16 @@ async def human(request):
         if params.get('interrupt'):
             avatar_session.flush_talk()
 
+        # Tự động nạp API key từ frontend nếu học viên cấu hình
+        if params.get('apikey'):
+            import os
+            from llm import LLM_PROVIDERS
+            provider = params.get('provider', 'gemini')
+            cfg = LLM_PROVIDERS.get(provider, LLM_PROVIDERS.get('gemini', {}))
+            key_env = cfg.get('api_key_env', 'GEMINI_API_KEY')
+            os.environ[key_env] = str(params['apikey']).strip()
+            avatar_session.opt.llm_provider = provider
+
         datainfo = {}
         if params.get('tts'):  # tts 参数透传（voice, emotion 等）
             datainfo['tts'] = params.get('tts')

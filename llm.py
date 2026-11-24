@@ -79,22 +79,65 @@ def _llm_model(opt) -> str:
 
 
 def _generate_smart_tutor_response(message: str) -> str:
-    """Tạo câu trả lời sư phạm tiếng Việt thông minh khi không có API key ngoài."""
+    """Tạo câu trả lời sư phạm tiếng Việt thông minh, trực diện khi không có API key ngoài."""
     msg = (message or "").lower().strip()
-    if any(k in msg for k in ["toán", "đạo hàm", "tích phân", "hình học", "phương trình", "đại số", "hình"]):
-        return f"Về câu hỏi môn Toán của em: '{message}'. Phương pháp tối ưu cho dạng bài này là em cần xác định rõ điều kiện bài toán, áp dụng công thức nền tảng và chia nhỏ từng bước tính toán. Thầy và em cùng phân tích chi tiết nhé!"
-    elif any(k in msg for k in ["lập trình", "python", "code", "ai", "deepfake", "webrtc", "máy tính"]):
-        return f"Về chủ đề công nghệ và lập trình này: '{message}'. Đây là một bài toán rất hấp dẫn trong Computer Vision và AI thời gian thực. Em cần chú ý tối ưu hóa luồng xử lý và đồng bộ khung hình để đạt hiệu năng cao nhất nhé!"
-    elif any(k in msg for k in ["tiếng anh", "english", "ngữ pháp", "từ vựng", "phát âm"]):
-        return f"Đối với môn Tiếng Anh: '{message}'. Việc luyện phản xạ và phát âm chuẩn tự nhiên theo từng ngữ cảnh là quan trọng nhất. Thầy sẽ cùng em luyện tập để nâng cao sự tự tin nhé!"
-    elif any(k in msg for k in ["newton", "vật lý", "vận tốc", "gia tốc", "hấp dẫn", "lực"]):
-        return f"Về câu hỏi Vật lý của em: '{message}'. Định luật này mô tả sự tương tác cơ bản của tự nhiên. Em hãy chú ý đến các đại lượng vật lý và đơn vị đo chuẩn nhé!"
+
+    # 1. Tự động tính toán các phép toán số học trực tiếp
+    arithmetic_match = re.search(r'(\d+(?:\.\d+)?)\s*([\+\-\*\/xX÷cộngtrừnhânchia])\s*(\d+(?:\.\d+)?)', msg)
+    if arithmetic_match:
+        try:
+            num1 = float(arithmetic_match.group(1))
+            op_raw = arithmetic_match.group(2)
+            num2 = float(arithmetic_match.group(3))
+            if op_raw in ['+', 'cộng']:
+                res = num1 + num2
+                op_name = "cộng"
+            elif op_raw in ['-', 'trừ']:
+                res = num1 - num2
+                op_name = "trừ"
+            elif op_raw in ['*', 'x', 'X', 'nhân']:
+                res = num1 * num2
+                op_name = "nhân"
+            elif op_raw in ['/', '÷', 'chia']:
+                res = num1 / num2 if num2 != 0 else "vô cực (không thể chia cho 0)"
+                op_name = "chia"
+            else:
+                res = None
+            if res is not None:
+                res_str = f"{res:.2f}".rstrip('0').rstrip('.') if isinstance(res, float) else str(res)
+                n1_str = f"{num1:.2f}".rstrip('0').rstrip('.')
+                n2_str = f"{num2:.2f}".rstrip('0').rstrip('.')
+                return f"Kết quả phép tính của em là: {n1_str} {op_name} {n2_str} bằng {res_str}. Em làm rất tốt, hãy cùng thầy tiếp tục làm thêm các bài toán khác nhé!"
+        except Exception:
+            pass
+
+    # 2. Cơ sở tri thức giải đáp trực diện các câu hỏi khoa học, tự nhiên & xã hội
+    if "thủ đô" in msg and ("việt nam" in msg or "nước ta" in msg or "vn" in msg):
+        return "Thủ đô của nước Cộng hòa Xã hội Chủ nghĩa Việt Nam là thành phố Hà Nội, trung tâm đầu não chính trị, kinh tế và văn hóa lâu đời của đất nước ta em nhé."
+    elif any(k in msg for k in ["lá cây", "diệp lục", "màu xanh của lá"]):
+        return "Lá cây có màu xanh là nhờ chất diệp lục (chlorophyll) trong lục lạp. Phân tử diệp lục hấp thụ mạnh ánh sáng đỏ và xanh lam từ mặt trời để quang hợp, nhưng phản xạ lại ánh sáng xanh lục đến mắt chúng ta, làm cho lá có màu xanh."
+    elif "quang hợp" in msg:
+        return "Quang hợp là quá trình thực vật sử dụng năng lượng ánh sáng mặt trời được diệp lục hấp thụ để tổng hợp chất hữu cơ (glucose) và giải phóng khí oxy từ nước và khí carbon dioxide."
+    elif any(k in msg for k in ["newton", "vạn vật hấp dẫn"]):
+        return "Định luật vạn vật hấp dẫn của Isaac Newton phát biểu: Mọi vật thể trong vũ trụ đều hút nhau với một lực tỉ lệ thuận với tích khối lượng của chúng và tỉ lệ nghịch với bình phương khoảng cách giữa chúng, theo công thức F bằng G nhân m1 nhân m2 chia cho r bình phương."
+    elif any(k in msg for k in ["định luật ôm", "định luật ohm"]):
+        return "Định luật Ôm trong vật lý phát biểu: Cường độ dòng điện chạy qua một dây dẫn tỉ lệ thuận với hiệu điện thế giữa hai đầu dây và tỉ lệ nghịch với điện trở của dây đó. Công thức là I bằng U chia cho R."
+    elif any(k in msg for k in ["pythagore", "pi-ta-go", "pitago"]):
+        return "Định lý Pythagore trong tam giác vuông phát biểu: Bình phương độ dài cạnh huyền bằng tổng bình phương độ dài hai cạnh góc vuông, công thức là a bình phương cộng b bình phương bằng c bình phương."
+    elif any(k in msg for k in ["diện tích hình tròn", "hình tròn"]):
+        return "Công thức tính diện tích hình tròn là S bằng số Pi nhân với bán kính bình phương (S = π * r^2). Chu vi hình tròn là C bằng 2 nhân Pi nhân bán kính em nhé."
+    elif "mặt trăng" in msg and any(k in msg for k in ["đầu tiên", "ai", "đặt chân"]):
+        return "Con người đầu tiên đặt chân lên Mặt Trăng là nhà du hành vũ trụ người Mỹ Neil Armstrong vào ngày 20 tháng 7 năm 1969, trong sứ mệnh lịch sử Apollo 11 của cơ quan NASA."
+    elif "nước sôi" in msg or "đóng băng" in msg:
+        return "Ở áp suất khí quyển tiêu chuẩn 1 atm, nước tinh khiết sôi và chuyển thành hơi ở 100 độ C, và đóng băng thành thể rắn ở 0 độ C em nhé."
     elif any(k in msg for k in ["mẹo", "phương pháp", "bí quyết", "hiệu quả"]):
-        return "Để học tập đạt hiệu quả cao nhất, em nên áp dụng kỹ thuật Pomodoro học tập ngắt quãng 25 phút, kết hợp ghi chú sơ đồ tư duy và thực hành giải bài tập ngay sau khi học lý thuyết em nhé!"
+        return "Để học tập đạt hiệu quả cao nhất, em nên áp dụng kỹ thuật Pomodoro học tập ngắt quãng 25 phút, kết hợp sơ đồ tư duy Mindmap và thực hành giải bài tập ngay sau khi học lý thuyết em nhé!"
     elif any(k in msg for k in ["chào", "hello", "hi", "thầy ơi", "alo", "bắt đầu"]):
         return "Chào em! Thầy là gia sư AI của em hôm nay. Thầy rất vui được đồng hành cùng em trong tiết học 1 kèm 1 này. Em có câu hỏi hay bài tập nào cần thầy hướng dẫn ngay không nào?"
+    elif any(k in msg for k in ["lập trình", "python", "code", "ai", "webrtc"]):
+        return f"Về chủ đề công nghệ: '{message}'. Đây là một kiến trúc rất thú vị. Trong lập trình, em nên chia nhỏ bài toán thành các hàm độc lập, kiểm thử kỹ từng module để chương trình vận hành mượt mà nhất nhé!"
     else:
-        return f"Thầy đã lắng nghe câu hỏi của em: '{message}'. Đây là một thắc mắc rất hay trong bài học hôm nay! Thầy đang cùng em phân tích và tìm ra lời giải chính xác nhất nhé."
+        return f"Về câu hỏi: '{message}'. Để thầy có thể phân tích sâu và giải chi tiết từng bước cho mọi bài tập nâng cao của em, em hãy dán API Key (như Gemini miễn phí) vào ô 'Trí Tuệ Nhân Tạo' ở cột bên phải nhé!"
 
 
 def llm_response(message,avatar_session:'BaseAvatar',datainfo:dict={}):

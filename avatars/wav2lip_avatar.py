@@ -46,6 +46,8 @@ from utils.device import initialize_device
 from registry import register
 
 device = initialize_device()
+if device == 'cuda':
+    torch.backends.cudnn.benchmark = True
 logger.info('Using {} for inference.'.format(device))
 
 def _load(checkpoint_path):
@@ -134,7 +136,7 @@ class LipReal(BaseAvatar):
         audiofeat_batch = np.reshape(audiofeat_batch, [len(audiofeat_batch), audiofeat_batch.shape[1], audiofeat_batch.shape[2], 1])
         audiofeat_batch = torch.FloatTensor(np.transpose(audiofeat_batch, (0, 3, 1, 2))).to(device)
 
-        with torch.no_grad():
+        with torch.inference_mode():
             pred = self.model(audiofeat_batch, img_batch)
         pred = pred.cpu().numpy().transpose(0, 2, 3, 1) * 255.
         return pred

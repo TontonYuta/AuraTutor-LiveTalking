@@ -210,6 +210,38 @@
 
         <!-- Right Column: Drivers + Tương tác câu hỏi -->
         <div class="col-lg-5">
+            <!-- Cấu hình Trí Tuệ Nhân Tạo (AI API Key) -->
+            <div class="glass-card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div><i class="bi bi-cpu-fill text-primary"></i> Trí Tuệ Gia Sư (AI LLM Key)</div>
+                    <span class="badge bg-secondary-subtle text-muted small" id="aiKeyStatus">Tích hợp sẵn</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-sm-5">
+                            <select class="form-select form-select-sm" id="selLlmProvider">
+                                <option value="gemini" selected>Google Gemini (Free)</option>
+                                <option value="groq">Groq Llama 3.3 (0.2s)</option>
+                                <option value="openai">OpenAI (GPT-4o)</option>
+                                <option value="deepseek">DeepSeek</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-7">
+                            <div class="input-group input-group-sm">
+                                <input type="password" class="form-control" id="txtApiKey" placeholder="Dán API Key vào đây..." />
+                                <button class="btn btn-primary" type="button" onclick="saveApiKey()"><i class="bi bi-check-lg"></i> Lưu</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <small class="text-muted" style="font-size:0.75rem;">
+                            💡 Nhập key để thầy giáo trả lời sâu, giải toán và tư duy đúng 100%.
+                        </small>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="small text-primary" style="font-size:0.75rem;">Lấy key Gemini miễn phí ↗</a>
+                    </div>
+                </div>
+            </div>
+
             <div class="glass-card">
                 <div class="card-header"><i class="bi bi-chat-dots-fill"></i> Tương Tác Cùng Thầy Giáo</div>
                 <div class="card-body">
@@ -507,17 +539,66 @@ function sendText() {
         return;
     }
 
+    const apikey = localStorage.getItem('auratutor_apikey') || '';
+    const provider = localStorage.getItem('auratutor_provider') || 'gemini';
+    const payload = { text, type, interrupt, sessionid: String(window.sessionid) };
+    if (apikey) {
+        payload.apikey = apikey;
+        payload.provider = provider;
+    }
+
     unlockAudio();
     fetch('/human', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, type, interrupt, sessionid: String(window.sessionid) }),
+        body: JSON.stringify(payload),
     }).then(r => r.json()).then(d => {
         txtInput.value = '';
         showBanner('✅ Đã gửi câu hỏi tới thầy giáo! Thầy đang trả lời...', 'success');
     }).catch(err => {
         showBanner('Lỗi gửi câu hỏi: ' + err.message, 'danger');
     });
+}
+
+function saveApiKey() {
+    const key = document.getElementById('txtApiKey').value.trim();
+    const provider = document.getElementById('selLlmProvider').value;
+    if (key) {
+        localStorage.setItem('auratutor_apikey', key);
+        localStorage.setItem('auratutor_provider', provider);
+        const st = document.getElementById('aiKeyStatus');
+        if (st) {
+            st.className = 'badge bg-success small';
+            st.textContent = 'Đã kích hoạt AI ' + provider.toUpperCase();
+        }
+        showBanner('🎉 Đã kích hoạt trí tuệ AI (' + provider.toUpperCase() + ')! Thầy giáo sẽ giải đáp chi tiết, đúng trọng tâm mọi bài học.', 'success');
+    } else {
+        localStorage.removeItem('auratutor_apikey');
+        const st = document.getElementById('aiKeyStatus');
+        if (st) {
+            st.className = 'badge bg-secondary-subtle text-muted small';
+            st.textContent = 'Tích hợp sẵn';
+        }
+        showBanner('Đã xóa API Key. Đang dùng chế độ gia sư cơ bản.', 'info');
+    }
+}
+
+function loadSavedApiKey() {
+    const savedKey = localStorage.getItem('auratutor_apikey');
+    const savedProvider = localStorage.getItem('auratutor_provider');
+    if (savedKey) {
+        const inputEl = document.getElementById('txtApiKey');
+        if (inputEl) inputEl.value = savedKey;
+        if (savedProvider) {
+            const selEl = document.getElementById('selLlmProvider');
+            if (selEl) selEl.value = savedProvider;
+        }
+        const st = document.getElementById('aiKeyStatus');
+        if (st) {
+            st.className = 'badge bg-success small';
+            st.textContent = 'Đã kích hoạt AI ' + (savedProvider || 'GEMINI').toUpperCase();
+        }
+    }
 }
 
 // ─── Nói trực tiếp bằng Micro ──────────────────────────────
@@ -604,6 +685,7 @@ function downloadRecord() {
 
 // ─── TỰ ĐỘNG VÀO LỚP KHI MỞ TRANG ──────────────────────────
 window.addEventListener('load', () => {
+    loadSavedApiKey();
     setTimeout(() => {
         if (!window.pc) start();
     }, 500);
