@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraTutor - Bảng Điều Khiển Webcam Ảo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3f37c9;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f0f4fc;
+            --card-bg: rgba(255,255,255,0.85);
+            --radius: 14px;
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: #1e293b;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: var(--radius);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
+            padding: 16px 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-header i { color: var(--primary); font-size: 1.2rem; }
+        .card-body { padding: 20px; }
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #4361ee, #3f37c9);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(67,97,238,0.4);
+        }
+        .btn-success-custom {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+        }
+        .btn-danger-custom {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        .btn-danger-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239,68,68,0.4);
+        }
+        .btn-warning-custom {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        .btn-warning-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .status-speaking {
+            background: rgba(16,185,129,0.2);
+            color: #059669;
+        }
+        .status-silent {
+            background: rgba(100,116,139,0.2);
+            color: #64748b;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        .status-speaking .status-dot {
+            background: #10b981;
+        }
+        .status-silent .status-dot {
+            background: #94a3b8;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .config-section {
+            background: rgba(241,245,249,0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .config-section h6 {
+            color: #4361ee;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        textarea {
+            resize: none;
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 12px;
+            font-family: inherit;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #4361ee;
+            box-shadow: 0 0 0 3px rgba(67,97,238,0.1);
+        }
+        .form-select, .form-control {
+            border-radius: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 10px 12px;
+        }
+        .form-select:focus, .form-control:focus {
+            outline: none;
+            border-color: #4361ee;
+            box-shadow: 0 0 0 3px rgba(67,97,238,0.1);
+        }
+        .history-item {
+            background: rgba(241,245,249,0.5);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .history-item:hover {
+            background: rgba(241,245,249,0.8);
+            transform: translateX(4px);
+        }
+        .history-item .time {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .history-item .text {
+            color: #1e293b;
+        }
+        .page-title {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .page-title h1 {
+            font-weight: 700;
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        .page-title p {
+            color: rgba(255,255,255,0.8);
+            font-size: 1rem;
+        }
+        .alert-info-custom {
+            background: rgba(59,130,246,0.1);
+            border: 1px solid rgba(59,130,246,0.3);
+            color: #1e40af;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+        .quick-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: rgba(67,97,238,0.1);
+            color: #4361ee;
+            font-weight: 600;
+            margin: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .quick-btn:hover {
+            background: rgba(67,97,238,0.2);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="page-title">
+        <h1><i class="bi bi-camera-video"></i> Bảng Điều Khiển Webcam Ảo</h1>
+        <p>Bảng điều khiển phiên học - Xuất luồng webcam ảo cho Google Meet/Zoom</p>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            
+            <div class="col-lg-8">
+                
+                <div class="glass-card">
+                    <div class="card-header">
+                        <i class="bi bi-activity"></i>
+                        <span>Trạng thái</span>
+                        <span id="statusIndicator" class="status-indicator status-silent ms-auto">
+                            <span class="status-dot"></span>
+                            <span>Đang nghỉ</span>
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="config-section">
+                                    <h6><i class="bi bi-camera-video-fill"></i> Webcam Ảo</h6>
+                                    <p class="mb-1"><strong>Tên thiết bị: </strong><span id="virtualcamDevice">OBS Virtual Camera</span></p>
+                                    <p class="mb-1"><strong>Độ phân giải: </strong><span id="resolution">1280x720</span></p>
+                                    <p class="mb-0"><strong>Tốc độ khung hình: </strong><span id="fps">25 FPS</span></p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="config-section">
+                                    <h6><i class="bi bi-speaker"></i> Đầu ra Âm thanh</h6>
+                                    <p class="mb-1"><strong>Thiết bị: </strong><span id="audioDevice">Loa mặc định hệ thống</span></p>
+                                    <p class="mb-0"><strong>Tần số lấy mẫu: </strong>16000 Hz</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="glass-card">
+                    <div class="card-header">
+                        <i class="bi bi-chat-text"></i>
+                        <span>Đầu ra Giọng nói</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nhập nội dung văn bản</label>
+                            <textarea id="textInput" class="form-control" rows="4"
+                                placeholder="Nhập nội dung cần Gia sư phát âm, sau đó nhấn nút Gửi..."></textarea>
+                        </div>
+
+                        <!-- Câu thoại mẫu nhanh -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Câu thoại mẫu nhanh</label>
+                            <div>
+                                <span class="quick-btn" onclick="quickSpeak('Chào em, chào mừng em đến với buổi học!')">Chào hỏi</span>
+                                <span class="quick-btn" onclick="quickSpeak('Cảm ơn em đã chú ý lắng nghe!')">Cảm ơn</span>
+                                <span class="quick-btn" onclick="quickSpeak('Em có câu hỏi nào cần thầy giải đáp không?')">Hỏi bài</span>
+                                <span class="quick-btn" onclick="quickSpeak('Tạm biệt em, hẹn gặp em ở buổi học sau!')">Tạm biệt</span>
+                                <span class="quick-btn" onclick="quickSpeak('Em đợi thầy một chút nhé, thầy đang kiểm tra bài!')">Chờ chút</span>
+                            </div>
+                        </div>
+
+                        
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button id="speakBtn" class="btn btn-success-custom" onclick="sendText()">
+                                <i class="bi bi-play-fill"></i> Gửi văn bản
+                            </button>
+                            <button id="interruptBtn" class="btn btn-danger-custom" onclick="interruptSpeech()">
+                                <i class="bi bi-stop-fill"></i> Ngắt lời
+                            </button>
+                            <button class="btn btn-warning-custom" onclick="clearInput()">
+                                <i class="bi bi-x-circle"></i> Xóa trắng
+                            </button>
+                            <button class="btn btn-primary-custom" onclick="checkStatus()">
+                                <i class="bi bi-refresh"></i> Làm mới
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            
+            <div class="col-lg-4">
+                <div class="glass-card">
+                    <div class="card-header">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Lịch sử câu hỏi</span>
+                        <button class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearHistory()">
+                            <i class="bi bi-trash"></i> Xóa
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="historyList" style="max-height: 400px; overflow-y: auto;">
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hướng dẫn sử dụng -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <i class="bi bi-book"></i>
+                        <span>Hướng dẫn sử dụng</span>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i>
+                                Nhập nội dung và nhấn "Gửi văn bản" để Gia sư bắt đầu giảng bài
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i>
+                                Nhấn "Ngắt lời" để dừng phát âm ngay lập tức
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i>
+                                Câu thoại mẫu nhanh giúp gửi nhanh các câu chào hỏi thường gặp
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i>
+                                Nhấn vào lịch sử để phát lại câu nói
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-check-circle text-success"></i>
+                                Phím tắt: Ctrl+Enter để Gửi, Phím Esc để Ngắt lời
+                            </li>
+                            <li class="mb-2">
+                                <i class="bi bi-info-circle text-primary"></i>
+                                Cấu hình được thiết lập từ tệp config.yaml, trang web hiển thị trạng thái hiện tại
+                            </li>
+                            <li class="mb-0">
+                                <i class="bi bi-info-circle text-primary"></i>
+                                Mã phiên (Session ID) mặc định là "0"
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        //const BASE_URL = 'http://localhost:8010';
+        const SESSION_ID = '0';
+        let speakingHistory = [];
+
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            checkStatus();
+            loadHistory();
+            
+            setInterval(checkStatus, 3000);
+        });
+
+        // Gửi văn bản
+        async function sendText() {
+            const text = document.getElementById('textInput').value.trim();
+            if (!text) {
+                alert('Vui lòng nhập nội dung văn bản!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/human`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionid: SESSION_ID,
+                        type: 'echo',
+                        text: text
+                    })
+                });
+
+                const result = await response.json();
+                if (result.code === 0) {
+                    console.log('Đã gửi thành công:', text);
+                    addToHistory(text);
+                    document.getElementById('textInput').value = '';
+                    
+                    setTimeout(checkStatus, 500);
+                } else {
+                    alert('Gửi thất bại: ' + result.msg);
+                }
+            } catch (error) {
+                console.error('Lỗi gửi:', error);
+                alert('Gửi thất bại, vui lòng kiểm tra máy chủ có đang chạy không!');
+            }
+        }
+
+        
+        function quickSpeak(text) {
+            document.getElementById('textInput').value = text;
+            sendText();
+        }
+
+        // Ngắt lời
+        async function interruptSpeech() {
+            try {
+                const response = await fetch(`/interrupt_talk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionid: SESSION_ID })
+                });
+
+                const result = await response.json();
+                if (result.code === 0) {
+                    console.log('Đã ngắt lời nói');
+                    checkStatus();
+                } else {
+                    alert('Ngắt lời thất bại: ' + result.msg);
+                }
+            } catch (error) {
+                console.error('Lỗi ngắt lời:', error);
+                alert('Ngắt lời thất bại, vui lòng kiểm tra máy chủ!');
+            }
+        }
+
+        
+        async function checkStatus() {
+            try {
+                const response = await fetch(`/is_speaking`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionid: SESSION_ID })
+                });
+
+                const result = await response.json();
+                updateStatusIndicator(result.data);
+            } catch (error) {
+                console.error('Lỗi kiểm tra trạng thái:', error);
+                updateStatusIndicator(false);
+            }
+        }
+
+        
+        function updateStatusIndicator(isSpeaking) {
+            const indicator = document.getElementById('statusIndicator');
+            if (isSpeaking) {
+                indicator.className = 'status-indicator status-speaking ms-auto';
+                indicator.innerHTML = '<span class="status-dot"></span><span>Đang giảng bài</span>';
+            } else {
+                indicator.className = 'status-indicator status-silent ms-auto';
+                indicator.innerHTML = '<span class="status-dot"></span><span>Đang nghỉ</span>';
+            }
+        }
+
+        // Xóa trắng
+        function clearInput() {
+            document.getElementById('textInput').value = '';
+        }
+
+        
+        function addToHistory(text) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
+            speakingHistory.unshift({ text, time: timeStr });
+            if (speakingHistory.length > 20) {
+                speakingHistory.pop();
+            }
+
+            saveHistory();
+            renderHistory();
+        }
+
+        
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            container.innerHTML = speakingHistory.map(item => `
+                <div class="history-item" onclick="replayFromHistory('${item.text}')">
+                    <div class="time">${item.time}</div>
+                    <div class="text">${item.text}</div>
+                </div>
+            `).join('');
+        }
+
+        
+        function replayFromHistory(text) {
+            document.getElementById('textInput').value = text;
+            sendText();
+        }
+
+        // Xóa lịch sử
+        function clearHistory() {
+            speakingHistory = [];
+            saveHistory();
+            renderHistory();
+        }
+
+        
+        function saveHistory() {
+            localStorage.setItem('virtualcam_history', JSON.stringify(speakingHistory));
+        }
+
+        
+        function loadHistory() {
+            const saved = localStorage.getItem('virtualcam_history');
+            if (saved) {
+                speakingHistory = JSON.parse(saved);
+                renderHistory();
+            }
+        }
+
+        
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                sendText();
+            }
+            if (e.key === 'Escape') {
+                interruptSpeech();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+###############################################################################
+#  LiveTalking Configuration - Vietnamese 1:1 Online Classroom (AuraTutor)
+###############################################################################
+
+# -------- Audio ----------------------------------------------------------
+l: 10
+m: 8
+r: 10
+
+# -------- Avatar Model ----------------------------------------------------------
+model: wav2lip                 # musetalk / wav2lip / ultralight
+avatar_id: wav2lip_avatar_glass_man
+batch_size: 8
+
+# -------- Custom Actions ----------------------------------------------------------
+customvideo_config: ''
+
+# -------- TTS (Tiếng Việt) ------------------------------------------------
+tts: edgetts                   # edgetts / gpt-sovits / cosyvoice
+REF_FILE: 'vi-VN-NamMinhNeural'  # Giọng nam giảng viên tiếng Việt: vi-VN-NamMinhNeural (hoặc nữ: vi-VN-HoaiMyNeural)
+REF_TEXT: ''
+TTS_SERVER: ''
+
+# -------- LLM ----------------------------------------------------------
+llm_provider: openai           # OpenAI-compatible (Gemini, Groq, OpenAI, Ollama)
+llm_model: ''                  # Model name
+
+# -------- Transport ----------------------------------------------------------
+transport: webrtc              # webrtc / virtualcam / rtmp
+stun: 'stun:stun.l.google.com:19302'  # Google STUN server
+push_url: ''
+max_session: 15
+listenport: 8010
